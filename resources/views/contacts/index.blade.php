@@ -28,6 +28,14 @@
                     </tr>
                   </thead>
                   <tbody>
+                    @if ($message = Session::get('success'))
+                      <div class="alert alert-success alert-block">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                          <strong>{{ $message }}</strong>
+                      </div>                    
+                        
+                    @endif
+
                     @if ($contacts->count() > 0)
                       @foreach ($contacts as $index => $contact)
                         <tr>
@@ -38,11 +46,15 @@
                           <td>{{$contact->company->name}}</td>
                           <td>
                             <a href="{{route('contacts.show', $contact->id)}}" class="btn btn-sm btn-outline-info"><i class="fa fa-eye"></i></a>
-                            {{-- <a href="{{route('contacts.edit', $contact->id)}}" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a> --}}
-                            {{-- <a href="{{route('contacts.delete', $contact->id)}}" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></a> --}}
+                            <a href="{{route('contacts.edit', $contact->id)}}" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
+                            <a href="{{route('contacts.destroy', $contact->id)}}" class="btn btn-sm btn-outline-danger btn-delete"><i class="fa fa-trash"></i></a> 
                           </td>
                         </tr>
                       @endforeach
+                      <form id="form-delete" method="POST" style="display: none;">
+                        @csrf
+                        @method('DELETE')
+                      </form>
                         
                     @endif
                     

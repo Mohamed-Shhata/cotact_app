@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 
 class ContactController extends Controller
@@ -12,33 +13,61 @@ class ContactController extends Controller
         $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
 
         // dd($companys);
-        $contacts = \App\Models\Contact::orderBy('first_name','asc')->where(function($query){
-            if(request()->has('company_id') && request()->input('company_id') != ''){
-                $query->where('company_id', request('company_id'));
-            }
-        })->paginate(10);
+        $contacts = Contact::latestLast()->filter()->paginate(10);
         
         // paginate(10);
         return view('contacts.index', compact('contacts', 'companys'));
     }
     function create()
     {
-        return view('contacts.create');
+        $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        $contact = new \App\Models\Contact;
+        return view('contacts.create', compact('companys', 'contact'));
     }
     function store(Request $request)
     {
-        $contact = new \App\Models\Contact;
-        $contact->name = $request->name;
-        $contact->email = $request->email;
-        $contact->phone = $request->phone;
-        $contact->address = $request->address;
-        $contact->save();
-        return redirect()->route('contacts.index');
+        $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required|email',
+            'address' => 'required',
+            'company_id' => 'required|exists:companys,id',
+        ]);
+        $contact = \App\Models\Contact::create($request->all());
+        return redirect()->route('contacts.index')->with('success', 'Contact created successfully.');
+
     }
     function show($id)
     {
-        $contact = \App\Models\Contact::find($id);
+        $contact = \App\Models\Contact::findOrFail($id);
         return view('contacts.show', compact('contact'));
     }
-    
+    function edit($id)
+    {
+        $contact = \App\Models\Contact::findOrFail($id);
+        $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        return view('contacts.edit', compact('contact', 'companys'));
+    }
+    function update(Request $request, $id)
+    {
+        $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required|email',
+            'address' => 'required',
+            'company_id' => 'required|exists:companys,id',
+        ]);
+        $contact = \App\Models\Contact::findOrFail($id);
+        $contact->update($request->all());
+        return redirect()->route('contacts.index')->with('success', 'Contact updated successfully.');
+    }
+    function destroy($id)
+    {
+        dd("destroy");
+        
+        $contact = \App\Models\Contact::findOrFail($id);
+        $contact->delete();
+        
+        return redirect()->route('contacts.index')->with('success', 'Contact deleted successfully.');
+    }
 }
