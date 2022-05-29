@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+use App\Models\Scopes\FilterScope;
+use App\Models\Scopes\searchScope;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\ContactSearchScope;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Contact extends Model
 {
@@ -12,6 +16,7 @@ class Contact extends Model
     protected $fillable = [
         'first_name', 'last_name', 'email', 'address', 'phone', 'company_id'
     ];
+    public $filterColumns=['company_id'];
 
     
     public function company()
@@ -21,14 +26,12 @@ class Contact extends Model
     public function scopeLatestLast($query){
         return $query->orderBy('first_name', 'asc');
     }
-    public function scopeFilter($query){
-        if(request()->has('company_id') && request()->input('company_id') != ''){
-            $query->where('company_id', request('company_id'));
-        }
-        if(request()->has('search') && request()->input('search') != ''){
-            $query->where('first_name', 'like', '%'.request('search').'%');
-        }
-        return $query;
+    protected static function booted(){
+        static::addGlobalScope(new FilterScope);
+        // static::addGlobalScope(new searchScope);
+        static::addGlobalScope(new ContactSearchScope);
+
     }
+    
 }
 

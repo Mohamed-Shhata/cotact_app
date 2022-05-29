@@ -5,15 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
     function index()
     {
         $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
-
+        \DB::enableQueryLog();
         // dd($companys);
-        $contacts = Contact::latestLast()->filter()->paginate(10);
+        $contacts = Contact::latestLast()->paginate(10);
+        // dd(\DB::getQueryLog());
         
         // paginate(10);
         return view('contacts.index', compact('contacts', 'companys'));
