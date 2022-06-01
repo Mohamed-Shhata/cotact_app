@@ -11,10 +11,14 @@ class ContactController extends Controller
 {
     function index()
     {
-        $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
-        \DB::enableQueryLog();
+        $user = auth()->user();
+        $companys =  $user->companies()->orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        // \DB::enableQueryLog();
         // dd($companys);
-        $contacts = Contact::latestLast()->paginate(10);
+        $contacts = $user->contacts()->with('company')->latestLast()->paginate(10);
+        
+        
+       
         // dd(\DB::getQueryLog());
         
         // paginate(10);
@@ -22,7 +26,8 @@ class ContactController extends Controller
     }
     function create()
     {
-        $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        $companys = auth()->user()->companies()->orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        
         $contact = new \App\Models\Contact;
         return view('contacts.create', compact('companys', 'contact'));
     }
@@ -35,7 +40,7 @@ class ContactController extends Controller
             'address' => 'required',
             'company_id' => 'required|exists:companys,id',
         ]);
-        $contact = \App\Models\Contact::create($request->all());
+        $contact = \App\Models\Contact::create($request->all()+['user_id' => auth()->id()]);
         return redirect()->route('contacts.index')->with('success', 'Contact created successfully.');
 
     }
@@ -47,7 +52,7 @@ class ContactController extends Controller
     function edit($id)
     {
         $contact = \App\Models\Contact::findOrFail($id);
-        $companys = Company::orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
+        $companys = auth()->user()->companies()->orderBy('name')->pluck('name', 'id')->prepend('All Companies', '');
         return view('contacts.edit', compact('contact', 'companys'));
     }
     function update(Request $request, $id)
@@ -60,12 +65,12 @@ class ContactController extends Controller
             'company_id' => 'required|exists:companys,id',
         ]);
         $contact = \App\Models\Contact::findOrFail($id);
-        $contact->update($request->all());
+        $contact->update($request->all()+['user_id' => auth()->id()]);
         return redirect()->route('contacts.index')->with('success', 'Contact updated successfully.');
     }
     function destroy($id)
     {
-        dd("destroy");
+        
         
         $contact = \App\Models\Contact::findOrFail($id);
         $contact->delete();
